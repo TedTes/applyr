@@ -1,0 +1,13 @@
+[project]
+name = "applyr"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "crewai>=1.10.1",
+    "langchain-community>=0.4.1",
+    "langchain-openai>=1.1.11",
+    "playwright>=1.58.0",
+    "tavily-python>=0.7.23",
+]
