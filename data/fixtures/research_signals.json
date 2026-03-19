@@ -1,0 +1,80 @@
+[
+  {
+    "title": "AI agent building for beginners: beginner setup tutorial",
+    "platform": "youtube",
+    "url": "https://youtube.com/watch?v=example1",
+    "source": {
+      "name": "YouTube Seed",
+      "url": "https://youtube.com"
+    },
+    "summary": "High-intent tutorial content aimed at developers who want a first project.",
+    "author": "BuildFast",
+    "view_count": 185000,
+    "like_count": 9200,
+    "comment_count": 480,
+    "relevance_score": 8.9,
+    "intent": "educational",
+    "keywords": ["tutorial", "beginner", "setup", "project"],
+    "hooks": ["Build your first working system", "Avoid setup mistakes"]
+  },
+  {
+    "title": "Best tools for AI agent building for beginners",
+    "platform": "web",
+    "url": "https://example.com/best-tools-ai-agents",
+    "source": {
+      "name": "Web Seed",
+      "url": "https://example.com"
+    },
+    "summary": "Tool comparison pages are attracting commercial and comparison intent.",
+    "relevance_score": 8.1,
+    "intent": "comparison",
+    "keywords": ["best tools", "comparison", "stack"],
+    "hooks": ["Which tool should you pick", "Fast stack comparison"]
+  },
+  {
+    "title": "AI agent building for beginners mistakes everyone makes",
+    "platform": "youtube",
+    "url": "https://youtube.com/watch?v=example2",
+    "source": {
+      "name": "YouTube Seed",
+      "url": "https://youtube.com"
+    },
+    "summary": "Mistake-driven content is performing because it reduces fear and speeds entry.",
+    "author": "ShipLabs",
+    "view_count": 94000,
+    "like_count": 5300,
+    "comment_count": 310,
+    "relevance_score": 8.4,
+    "intent": "educational",
+    "keywords": ["mistakes", "avoid", "beginner"],
+    "hooks": ["Stop wasting time", "Common failure modes"]
+  },
+  {
+    "title": "How companies use AI agent building for beginners in production",
+    "platform": "web",
+    "url": "https://example.com/production-ai-agents",
+    "source": {
+      "name": "Web Seed",
+      "url": "https://example.com"
+    },
+    "summary": "Case-study content suggests strong interest in practical business adoption.",
+    "relevance_score": 7.7,
+    "intent": "commercial",
+    "keywords": ["case study", "production", "business"],
+    "hooks": ["Real business outcomes", "Behind the scenes architecture"]
+  },
+  {
+    "title": "AI agent building for beginners news and trends",
+    "platform": "web",
+    "url": "https://example.com/ai-agent-trends",
+    "source": {
+      "name": "Web Seed",
+      "url": "https://example.com"
+    },
+    "summary": "Trend roundups capture top-of-funnel interest but age quickly.",
+    "relevance_score": 6.8,
+    "intent": "news",
+    "keywords": ["trends", "news", "2026"],
+    "hooks": ["What changed this month", "What to watch next"]
+  }
+]

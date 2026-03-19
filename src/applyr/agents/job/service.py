@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
+from pathlib import Path
 from statistics import mean
 
 from applyr.agents.job.models import (
@@ -16,6 +18,13 @@ from applyr.agents.job.models import (
     WorkMode,
 )
 from applyr.core.models import SourceRef
+from applyr.core.cache import FileCache
+from applyr.core.config import get_settings
+from applyr.core.logging import get_logger
+from applyr.core.retry import retry
+
+logger = get_logger(__name__)
+cache = FileCache(get_settings().cache_dir)
 
 
 @dataclass(frozen=True)
@@ -30,8 +39,9 @@ def run_job_workflow(
     query: JobSearchQuery,
     resume_profile: ResumeProfile,
     limit: int = 3,
+    seed_listings: list[JobListing] | None = None,
 ) -> JobWorkflowResult:
-    listings = search_jobs(query)
+    listings = search_jobs(query, seed_listings=seed_listings)
     scored_jobs = rank_jobs(listings, resume_profile)
     top_jobs = scored_jobs[:limit]
     drafts = [draft_application(score.job, resume_profile, score) for score in top_jobs]
@@ -43,9 +53,9 @@ def run_job_workflow(
     )
 
 
-def search_jobs(query: JobSearchQuery) -> list[JobListing]:
-    normalized_keywords = {keyword.lower() for keyword in query.keywords}
-    listings = [
+@retry()
+def default_job_seed() -> list[JobListing]:
+    return [
         JobListing(
             title="Senior Python AI Engineer",
             company="Northstar Labs",
@@ -100,6 +110,28 @@ def search_jobs(query: JobSearchQuery) -> list[JobListing]:
         ),
     ]
 
+
+def load_job_fixture(path: str | Path) -> list[JobListing]:
+    payload = json.loads(Path(path).read_text())
+    return [JobListing.model_validate(item) for item in payload]
+
+
+def search_jobs(query: JobSearchQuery, seed_listings: list[JobListing] | None = None) -> list[JobListing]:
+    normalized_keywords = {keyword.lower() for keyword in query.keywords}
+    if seed_listings is not None:
+        logger.info("using seeded job listings")
+        listings = seed_listings
+    else:
+        cache_key = query.model_dump_json()
+        cached = cache.get("jobs", cache_key)
+        if cached:
+            logger.info("job search cache hit")
+            listings = [JobListing.model_validate(item) for item in cached]
+        else:
+            logger.info("job search cache miss")
+            listings = default_job_seed()
+            cache.set("jobs", cache_key, [item.model_dump(mode="json") for item in listings])
+
     def matches(job: JobListing) -> bool:
         haystack = " ".join(
             filter(
@@ -125,7 +157,9 @@ def search_jobs(query: JobSearchQuery) -> list[JobListing]:
             return False
         return True
 
-    return [job for job in listings if matches(job)][: query.max_results]
+    filtered = [job for job in listings if matches(job)][: query.max_results]
+    logger.info("job search returned %s listings", len(filtered))
+    return filtered
 
 
 def rank_jobs(listings: list[JobListing], resume_profile: ResumeProfile) -> list[JobFitScore]:

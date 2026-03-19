@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
+from pathlib import Path
 from statistics import mean
 
 from applyr.agents.research.models import (
@@ -13,6 +15,13 @@ from applyr.agents.research.models import (
     TrendCluster,
 )
 from applyr.core.models import SourceRef
+from applyr.core.cache import FileCache
+from applyr.core.config import get_settings
+from applyr.core.logging import get_logger
+from applyr.core.retry import retry
+
+logger = get_logger(__name__)
+cache = FileCache(get_settings().cache_dir)
 
 
 @dataclass(frozen=True)
@@ -23,14 +32,19 @@ class ResearchWorkflowResult:
     briefs: list[ContentBrief]
 
 
-def run_research_workflow(query: ResearchQuery, limit: int = 5) -> ResearchWorkflowResult:
-    signals = collect_signals(query)
+def run_research_workflow(
+    query: ResearchQuery,
+    limit: int = 5,
+    seed_signals: list[ResearchSignal] | None = None,
+) -> ResearchWorkflowResult:
+    signals = collect_signals(query, seed_signals=seed_signals)
     clusters = cluster_signals(signals)
     briefs = generate_content_briefs(query, clusters, limit=limit)
     return ResearchWorkflowResult(query=query, signals=signals, clusters=clusters, briefs=briefs)
 
 
-def collect_signals(query: ResearchQuery) -> list[ResearchSignal]:
+@retry()
+def default_research_seed(query: ResearchQuery) -> list[ResearchSignal]:
     topic = query.topic
     return [
         ResearchSignal(
@@ -97,6 +111,32 @@ def collect_signals(query: ResearchQuery) -> list[ResearchSignal]:
             hooks=["What changed this month", "What to watch next"],
         ),
     ]
+
+
+def load_research_fixture(path: str | Path) -> list[ResearchSignal]:
+    payload = json.loads(Path(path).read_text())
+    return [ResearchSignal.model_validate(item) for item in payload]
+
+
+def collect_signals(
+    query: ResearchQuery,
+    seed_signals: list[ResearchSignal] | None = None,
+) -> list[ResearchSignal]:
+    if seed_signals is not None:
+        logger.info("using seeded research signals")
+        return seed_signals
+
+    cache_key = query.model_dump_json()
+    cached = cache.get("research", cache_key)
+    if cached:
+        logger.info("research cache hit")
+        return [ResearchSignal.model_validate(item) for item in cached]
+
+    logger.info("research cache miss")
+    signals = default_research_seed(query)
+    cache.set("research", cache_key, [item.model_dump(mode="json") for item in signals])
+    logger.info("research collection returned %s signals", len(signals))
+    return signals
 
 
 def cluster_signals(signals: list[ResearchSignal]) -> list[TrendCluster]:
