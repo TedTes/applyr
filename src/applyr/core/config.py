@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     )
 
     app_env: str = Field(default="development", alias="APP_ENV")
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    cache_dir: str = Field(default=".cache/applyr", alias="CACHE_DIR")
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     tavily_api_key: str | None = Field(default=None, alias="TAVILY_API_KEY")
     youtube_api_key: str | None = Field(default=None, alias="YOUTUBE_API_KEY")
