@@ -13,6 +13,7 @@ from applyr.agents.job.models import (
     ResumeProfile,
     WorkMode,
 )
+from applyr.agents.job.service import JobWorkflowResult, draft_application, rank_jobs, run_job_workflow, score_job, search_jobs
 
 __all__ = [
     "ApplicationDraft",
@@ -26,4 +27,10 @@ __all__ = [
     "JobType",
     "ResumeProfile",
     "WorkMode",
+    "JobWorkflowResult",
+    "draft_application",
+    "rank_jobs",
+    "run_job_workflow",
+    "score_job",
+    "search_jobs",
 ]

@@ -1,50 +1,38 @@
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, Annotated
-from langchain_core.messages import HumanMessage
-from langchain_openai import ChatOpenAI  # Or Anthropic/Grok
-from langchain_community.tools import TavilySearchResults
-from googleapiclient.discovery import build
-import operator
-import bs4  # For parsing if needed
+from pathlib import Path
+import sys
 
-llm = ChatOpenAI(model="gpt-4o")  # Swap as needed
-search_tool = TavilySearchResults(max_results=5)
-youtube = build('youtube', 'v3', developerKey='your_key')
+ROOT = Path(__file__).resolve().parent
+SRC = ROOT / "src"
 
-class State(TypedDict):
-    messages: Annotated[list, operator.add]
-    research_data: str
-    insights: str
-    content_ideas: str
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
-def researcher(state):
-    query = state['messages'][-1].content
-    web_results = search_tool.run(f"{query} youtube trends 2026")
-    yt_results = youtube.search().list(q=query, part='snippet', maxResults=5, type='video').execute()
-    data = f"Web: {web_results}\nYouTube: {yt_results}"
-    return {"research_data": data, "messages": [HumanMessage(content=f"Researched: {data[:500]}...")]}
+from applyr.agents.research import Platform, ResearchQuery, run_research_workflow
 
-def analyzer(state):
-    prompt = f"Analyze this data for YouTube content potential: {state['research_data']}. Extract trends, gaps, viral hooks."
-    insights = llm.invoke(prompt).content
-    return {"insights": insights}
 
-def generator(state):
-    prompt = f"From insights: {state['insights']}, generate 5 video ideas with titles, 1-min outlines, keywords, thumbnail ideas."
-    ideas = llm.invoke(prompt).content
-    return {"content_ideas": ideas, "messages": [HumanMessage(content=ideas)]}
+def main() -> None:
+    query = ResearchQuery(
+        topic="AI agent building for beginners",
+        audience="Developers and creators entering the AI automation space",
+        goals=["Identify topics with demand", "Generate useful content briefs"],
+        platforms=[Platform.WEB, Platform.YOUTUBE],
+        max_results_per_source=5,
+    )
+    result = run_research_workflow(query)
 
-workflow = StateGraph(State)
-workflow.add_node("researcher", researcher)
-workflow.add_node("analyzer", analyzer)
-workflow.add_node("generator", generator)
-workflow.set_entry_point("researcher")
-workflow.add_edge("researcher", "analyzer")
-workflow.add_edge("analyzer", "generator")
-workflow.add_edge("generator", END)
-graph = workflow.compile()
+    print("Top market opportunities:\n")
+    for cluster in result.clusters:
+        print(
+            f"- {cluster.name} | opportunity={cluster.opportunity_score}/10 | "
+            f"competition={cluster.competition_level}/10"
+        )
 
-# Run
-inputs = {"messages": [HumanMessage(content="AI agent building for beginners")]}
-result = graph.invoke(inputs)
-print(result['content_ideas'])
+    print("\nContent briefs:\n")
+    for brief in result.briefs[:3]:
+        print(f"- {brief.title} [{brief.score}/10]")
+        print(f"  Hook: {brief.hook}")
+        print(f"  Keyword: {brief.primary_keyword}")
+
+
+if __name__ == "__main__":
+    main()

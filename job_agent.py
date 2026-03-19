@@ -1,68 +1,42 @@
-from crewai import Agent, Task, Crew, Process
-from langchain_community.tools import TavilySearchResults
-from langchain_community.tools.playwright import NavigateTool, ClickTool, ExtractTextTool, FillTool, SubmitTool  # Browser tools
-from playwright.sync_api import sync_playwright
+from pathlib import Path
+import sys
 
-# Tools
-search_tool = TavilySearchResults(max_results=10)
-browser_tools = [NavigateTool(), ClickTool(), ExtractTextTool(), FillTool(), SubmitTool()]  # Add more as needed
+ROOT = Path(__file__).resolve().parent
+SRC = ROOT / "src"
 
-# Agents
-searcher = Agent(
-    role='Job Searcher',
-    goal='Find relevant job listings based on criteria',
-    backstory='You are an expert at querying job sites for software engineering roles in Toronto or remote.',
-    tools=[search_tool],
-    verbose=True
-)
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
-qualifier = Agent(
-    role='Job Qualifier',
-    goal='Score job fits and filter top ones',
-    backstory='You evaluate jobs on skills match, salary, company rating. Score 1-10, pick top 3.',
-    verbose=True
-)
+from applyr.agents.job import JobSearchQuery, ResumeProfile, run_job_workflow
 
-applier = Agent(
-    role='Job Applier',
-    goal='Draft cover letters and submit applications',
-    backstory='You customize applications based on job desc and user resume. Use browser to fill forms.',
-    tools=browser_tools,
-    verbose=True
-)
 
-# Tasks
-search_task = Task(
-    description='Search for software engineering jobs in Toronto with keywords: {keywords}. Location: {location}. Return top 10 URLs and summaries.',
-    agent=searcher,
-    expected_output='List of job URLs with brief summaries'
-)
+def main() -> None:
+    query = JobSearchQuery(
+        keywords=["software engineer", "python", "ai"],
+        location="Toronto",
+        max_results=10,
+    )
+    resume_profile = ResumeProfile(
+        candidate_name="Tedros",
+        title="Software Engineer",
+        summary="experienced software engineer focused on Python, AI agents, and shipping practical products",
+        skills=["Python", "LLMs", "APIs", "Evaluation", "Automation"],
+        years_experience=6,
+        preferred_locations=["Toronto", "Remote"],
+        salary_floor=140000,
+    )
+    result = run_job_workflow(query, resume_profile)
 
-qualify_task = Task(
-    description='From {search_results}, score each on fit to resume: {resume_summary}. Pick top 3 with reasons.',
-    agent=qualifier,
-    expected_output='Top 3 jobs with scores and reasons'
-)
+    print("Top job matches:\n")
+    for item in result.scored_jobs[:3]:
+        print(f"- {item.job.title} @ {item.job.company} [{item.score}/10]")
+        print(f"  {item.rationale}")
 
-apply_task = Task(
-    description='For each top job {qualified_jobs}, draft a cover letter based on {resume_summary}. Navigate to URL, fill form if possible, or output draft for manual submit.',
-    agent=applier,
-    expected_output='Drafts and submission status'
-)
+    print("\nDraft artifacts:\n")
+    for draft in result.drafts:
+        print(f"- {draft.job.title} @ {draft.job.company}")
+        print(f"  Missing info: {', '.join(draft.missing_information) or 'none'}")
 
-# Crew
-crew = Crew(
-    agents=[searcher, qualifier, applier],
-    tasks=[search_task, qualify_task, apply_task],
-    process=Process.sequential,  # Or hierarchical for more control
-    verbose=2
-)
 
-# Run it
-inputs = {
-    'keywords': 'software engineer python ai',
-    'location': 'Toronto or remote',
-    'resume_summary': 'Experienced SWE in Python, AI agents, Toronto-based.' 
-}
-result = crew.kickoff(inputs=inputs)
-print(result)
+if __name__ == "__main__":
+    main()
