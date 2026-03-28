@@ -1,0 +1,66 @@
+[
+  {
+    "id": "reddit_fitness_001",
+    "source": "reddit",
+    "title": "Personal trainers still use spreadsheets for weekly accountability",
+    "body": "I manually check every client response, update a spreadsheet, and message people one by one. It takes me hours every Sunday.",
+    "url": "https://reddit.com/r/personaltraining/comments/fixture1",
+    "source_ref": {
+      "name": "Reddit",
+      "url": "https://reddit.com/r/personaltraining"
+    },
+    "source_score": 902,
+    "metadata": {
+      "subreddit": "personaltraining",
+      "upvotes": 902
+    }
+  },
+  {
+    "id": "reddit_bookkeeping_001",
+    "source": "reddit",
+    "title": "Bookkeeping firm manually reconciles contractor invoices",
+    "body": "My operations manager manually reconciles every invoice and bank transfer in a spreadsheet. Wish there was a tool for this.",
+    "url": "https://reddit.com/r/smallbusiness/comments/fixture2",
+    "source_ref": {
+      "name": "Reddit",
+      "url": "https://reddit.com/r/smallbusiness"
+    },
+    "source_score": 640,
+    "metadata": {
+      "subreddit": "smallbusiness",
+      "upvotes": 640
+    }
+  },
+  {
+    "id": "g2_clinic_001",
+    "source": "g2",
+    "title": "3-star review: clinic intake still needs duplicate data entry",
+    "body": "The product handles scheduling, but staff still re-enter insurance data by hand every day.",
+    "url": "https://www.g2.com/products/example-clinic/reviews/fixture1",
+    "source_ref": {
+      "name": "G2",
+      "url": "https://www.g2.com"
+    },
+    "source_score": 3,
+    "metadata": {
+      "category": "healthcare_admin",
+      "star_rating": 3
+    }
+  },
+  {
+    "id": "capterra_field_001",
+    "source": "capterra",
+    "title": "3-star review: recurring service scheduling is still manual",
+    "body": "We manually rebuild routes and call customers one by one when a recurring visit changes.",
+    "url": "https://www.capterra.com/p/example/reviews/fixture2",
+    "source_ref": {
+      "name": "Capterra",
+      "url": "https://www.capterra.com"
+    },
+    "source_score": 3,
+    "metadata": {
+      "category": "field_service",
+      "star_rating": 3
+    }
+  }
+]
